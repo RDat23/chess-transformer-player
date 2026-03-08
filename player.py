@@ -45,7 +45,7 @@ class ChessTransformer(nn.Module):
         )
         self.encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
-        # extra state tokens: side, 4 castling, ep
+
         self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
 
         self.norm = nn.LayerNorm(d_model)
@@ -55,7 +55,7 @@ class ChessTransformer(nn.Module):
             nn.Linear(d_model, d_model),
             nn.ReLU(),
             nn.Linear(d_model, 1),
-            nn.Tanh(),   # output in [-1,1]
+            nn.Tanh(),   
         )
 
     def forward(self, squares, side_to_move, castling, ep_square):
@@ -66,16 +66,16 @@ class ChessTransformer(nn.Module):
 
         x = self.square_embed(squares) + self.pos_embed(pos_ids)
 
-        side_tok = self.side_embed(side_to_move).unsqueeze(1)              # [B,1,D]
-        castling_tok = self.castling_embed(castling)                       # [B,4,D]
-        ep_tok = self.ep_embed(ep_square).unsqueeze(1)                     # [B,1,D]
-        cls_tok = self.cls_token.expand(B, 1, -1)                          # [B,1,D]
+        side_tok = self.side_embed(side_to_move).unsqueeze(1)              
+        castling_tok = self.castling_embed(castling)                       
+        ep_tok = self.ep_embed(ep_square).unsqueeze(1)                     
+        cls_tok = self.cls_token.expand(B, 1, -1)                          
 
-        x = torch.cat([cls_tok, side_tok, castling_tok, ep_tok, x], dim=1) # [B,71,D]
+        x = torch.cat([cls_tok, side_tok, castling_tok, ep_tok, x], dim=1) 
         x = self.encoder(x)
         x = self.norm(x)
 
-        pooled = x[:, 0]   # CLS token
+        pooled = x[:, 0]   
 
         policy_logits = self.policy_head(pooled)
         value = self.value_head(pooled).squeeze(-1)
@@ -144,7 +144,7 @@ class TransformerPlayer(Player):
             return True
 
         try:
-            # Download files from Hugging Face Hub
+            # Download files 
             self.model_path = hf_hub_download(
                 repo_id=self.repo_id,
                 filename=self.model_filename,
@@ -227,7 +227,7 @@ class TransformerPlayer(Player):
                 batch["ep_square"],
             )
 
-        logits = policy_logits[0]  # shape: [num_moves]
+        logits = policy_logits[0] 
 
         legal_scores = {}
         for mv in legal_uci:
